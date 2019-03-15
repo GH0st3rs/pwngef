@@ -26,7 +26,7 @@ import pwngef.commands.context
 # import pwngef.commands.elf
 # import pwngef.commands.gdbinit
 # import pwngef.commands.got
-# import pwngef.commands.heap
+import pwngef.commands.heap
 import pwngef.commands.hexdump
 import pwngef.commands.ida
 # import pwngef.commands.misc
