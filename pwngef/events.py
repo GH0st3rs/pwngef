@@ -50,26 +50,61 @@ def connect(func, event_handler, name=''):
         if debug:
             sys.stdout.write('%r %s.%s %r\n' % (name, func.__module__, func.__name__, args))
         return func(*args, **kwargs)
-
+    # append event
     registered[event_handler].append(caller)
     event_handler.connect(caller)
     return caller
 
 
+def disconnect(func, event_handler, name=''):
+    if debug:
+        print("Disconnecting", func.__name__, event_handler)
+
+    @wraps(func)
+    def caller(*args, **kwargs):
+        if debug:
+            sys.stdout.write('%r %s.%s %r\n' % (name, func.__module__, func.__name__, args))
+        return func(*args, **kwargs)
+    # append event
+    registered[event_handler].append(caller)
+    event_handler.disconnect(caller)
+    return caller
+
+
+# Exit
 def exit(func):
     return connect(func, gdb.events.exited, 'exit')
 
 
+def exit_unhook(func):
+    return disconnect(func, gdb.events.exited, 'exit_un')
+
+
+# Continue
 def cont(func):
     return connect(func, gdb.events.cont, 'cont')
 
 
+def cont_unhook(func):
+    return disconnect(func, gdb.events.cont, 'cont_un')
+
+
+# New ObjFile
 def new_objfile(func):
     return connect(func, gdb.events.new_objfile, 'obj')
 
 
+def new_objfile_unhook(func):
+    return disconnect(func, gdb.events.new_objfile, 'obj_un')
+
+
+# Stop
 def stop(func):
     return connect(func, gdb.events.stop, 'stop')
+
+
+def stop_unhook(func):
+    return disconnect(func, gdb.events.stop, 'stop_un')
 
 
 # before_prompt = partial(connect, event_handler=gdb.events.before_prompt, name='before_prompt')

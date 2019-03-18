@@ -196,15 +196,59 @@ class PwnGef:
     def __init__(self, server, *args, **kwargs):
         self.server = server
 
+    def _dispatch(self, method, params):
+        """
+        Plugin dispatcher
+        """
+        if DEBUG:
+            print("Received '%s'" % method)
+        if not hasattr(self, method):
+            raise NotImplementedError('Method "%s" is not exposed' % method)
+        func = getattr(self, method)
+        if DEBUG:
+            print("Executing %s(%s)" % (method, params))
+        return func(*params)
+
     def shutdown(self):
         """ shutdown() => None
         Cleanly shutdown the XML-RPC service.
         Example: ida shutdown
         """
-        self.server.shutdown()
         self.server.server_close()
+        # self.server.shutdown()
         print("[+] XMLRPC server stopped")
+        setattr(self.server, "shutdown", True)
         return None
+
+    def SetBbColor(self, ea=None, color=0x55ff7f):
+        ''' SetBbColor(ea, color) => None
+        Set Color for selected base block (default color = green)
+        Example: ida SetBbColor 0x456789 [0xFFFFFF]
+        '''
+        def get_bb(graph, ea):
+            for block in graph:
+                if block.startEA <= ea and block.endEA > ea:
+                    return block
+
+        f = idaapi.get_func(ea)
+        g = idaapi.FlowChart(f, flags=idaapi.FC_PREDS)
+        bb = get_bb(g, ea)
+        # create color node
+        p = idaapi.node_info_t()
+        p.bg_color = color
+        # Set Color
+        idaapi.set_node_info2(f.start_ea, bb.id, p, idaapi.NIF_BG_COLOR | idaapi.NIF_FRAME_COLOR)
+        idaapi.refresh_idaview_anyway()
+        return None
+
+    def _get_base_blocks(self, ea):
+        '''Received list of base blocks for current function'''
+        function = idaapi.get_func(ea)
+        flowchart = idaapi.FlowChart(function)
+        bb_list = []
+        for bb in flowchart:
+            bb_list.append(bb.start_ea)
+        return bb_list
 
 
 class ReqHandler(SimpleXMLRPCRequestHandler):
@@ -244,7 +288,6 @@ def start_xmlrpc_server():
         if hasattr(server, "shutdown") and server.shutdown is True:
             break
         server.handle_request()
-
     return
 
 

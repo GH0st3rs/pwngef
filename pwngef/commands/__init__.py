@@ -123,3 +123,15 @@ class GenericCommand(gdb.Command):
         self.repeat_count = self.repeat_count + 1 if self.repeat else 0
         self.__last_command = command
         return None
+
+
+def parse_arguments(args):
+    result = []
+    for item in args:
+        if item.isdigit():
+            result.append(int(item))
+        if item.lower().startswith('0x'):
+            result.append(int(item, 16))
+        else:
+            result.append(item)
+    return result
