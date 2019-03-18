@@ -90,6 +90,7 @@ class GlibcHeapChunksCommand(GenericCommand):
         nb = self.get_setting("peek_nb_byte")
         current_chunk = GlibcChunk(heap_section, from_base=True)
         chain_arrow_left = pwngef.config.get('chain_arrow_left')
+
         while True:
             if current_chunk.chunk_base_address == arena.top:
                 print("{} {} {}".format(str(current_chunk), chain_arrow_left, Color.greenify("top chunk")))

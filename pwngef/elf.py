@@ -13,11 +13,11 @@ from __future__ import print_function
 import ctypes
 import sys
 from collections import namedtuple
-
-import gdb
 from elftools.elf.constants import SH_FLAGS
 from elftools.elf.elffile import ELFFile
 from six.moves import reload_module
+
+import gdb
 
 import pwngef.arch
 import pwngef.auxv
@@ -250,7 +250,7 @@ def find_elf_magic(pointer, max_pages=1024, search_down=False, ret_addr_anyway=F
 
     max_addr = pwngef.arch.ptrmask
 
-    for i in range(max_pages):
+    for _ in range(max_pages):
         # Make sure address within valid range or gdb will raise Overflow exception
         if addr < 0 or addr > max_addr:
             return None
@@ -298,7 +298,7 @@ def get_phdrs(pointer):
     where the gdb.Value object is an ELF Program Header with
     the architecture-appropriate structure type.
     """
-    ei_class, Elfhdr = get_ehdr(pointer)
+    _, Elfhdr = get_ehdr(pointer)
 
     if Elfhdr is None:
         return (0, 0, None)
@@ -376,7 +376,7 @@ def map_inner(ei_class, ehdr, objfile):
         vaddr = int(phdr.p_vaddr)
         offset = int(phdr.p_offset)
         flags = int(phdr.p_flags)
-        ptype = int(phdr.p_type)
+        # ptype = int(phdr.p_type)
 
         memsz += pwngef.memory.page_offset(vaddr)
         memsz = pwngef.memory.page_size_align(memsz)

@@ -247,7 +247,7 @@ class ContextCommand(GenericCommand):
                     elif pwngef.arch.CURRENT_ARCH.is_call(insn) and self.get_setting("peek_calls") is True:
                         target = insn.operands[-1].split()[0]
                     elif pwngef.arch.CURRENT_ARCH.is_ret(insn) and self.get_setting("peek_ret") is True:
-                        target = pwngef.arch.CURRENT_ARCH.get_ra(insn, frame)
+                        target = int(pwngef.arch.CURRENT_ARCH.get_ra(insn, frame))
                 else:
                     line += "   {}".format(text)
 
