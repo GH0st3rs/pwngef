@@ -109,11 +109,12 @@ class IdaTraceFunctionCommand(GenericCommand):
     """Connect to IDA for trace by function base blocks"""
 
     _cmdline_ = "ida trace"
-    _syntax_ = "{:s} 0xADDRESS".format(_cmdline_)
+    _syntax_ = "{:s} [0xADDRESS|clear]".format(_cmdline_)
 
     def __init__(self):
         super(IdaTraceFunctionCommand, self).__init__(complete=gdb.COMPLETE_LOCATION, command=gdb.COMMAND_TRACEPOINTS)
         self._ida = None
+        self.tracepoints = []
         return None
 
     def do_invoke(self, argv):
@@ -124,14 +125,19 @@ class IdaTraceFunctionCommand(GenericCommand):
         # Check argv
         if not argv:
             pc = int(pwngef.arch.CURRENT_ARCH.pc)
+        elif argv[0] == 'clear':
+            for bb_addr in self.tracepoints:
+                self._ida.SetBbColor(bb_addr, 0xFFFFFF)
+            return None
         else:
             pc = int(argv[0], 16) if argv[0].lower().startswith('0x') else int(argv[0])
         # iterate for base blocks
         for bb_addr in self._ida._get_base_blocks(pc):
+            self.tracepoints.append(bb_addr)
             self._ida.SetBbColor(bb_addr, 0xFFFFFF)
             print(Color.cyanify('Set tracepoint at: %#x' % bb_addr))
             IdaTraceFunctionBreakpoint('*%#x' % bb_addr, internal=True, temporary=True)
-
+        return None
     # def disassemble(self, addr, nb_insn, nb_prev=0):
     #     line = ''
     #     if prev_count:
