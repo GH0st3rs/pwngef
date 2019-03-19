@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
+import json
 import gdb
 import pwngef.arch
 import pwngef.memory
@@ -12,18 +13,20 @@ import pwngef.memory
 class Instruction:
     """PWNGEF representation of a CPU instruction."""
 
-    def __init__(self, address, location, mnemo, operands):
+    def __init__(self, address, location, mnemo, operands, comment=''):
         self.address = address
         self.location = location
         self.mnemonic = mnemo
         self.operands = operands
+        self.comment = ' # %s' % comment if comment else ''
 
     def __str__(self):
-        return "{:#10x} {:16} {:6} {:s}".format(
+        return "{:#10x} {:16} {:6} {:s}{:s}".format(
             self.address,
             self.location,
             self.mnemonic,
-            ", ".join(self.operands)
+            ", ".join(self.operands),
+            self.comment
         )
 
     def is_valid(self):
@@ -191,3 +194,43 @@ def capstone_disassemble(location, nb_insn, **kwargs):
         if nb_insn == 0:
             break
     return
+
+
+def ida_disassemble(addr, nb_insn, nb_prev=0):
+    """Disassemble `nb_insn` instructions after `addr` and `nb_prev` before
+    `addr` using the IDA PRO disassembler, if available.
+    Return an iterator of Instruction objects."""
+    def ida_insn_to_pwngef_insn(address, ida_insn):
+        sym_info = gdb_get_location_from_symbol(address)
+        loc = "<{}+{}>".format(*sym_info) if sym_info else ""
+        asm = ida_insn.split(None, 1)
+        if len(asm) > 1:
+            mnemonic, ops = asm
+        else:
+            mnemonic, ops = asm[0], ''
+        comment = ''
+        if ' # ' in ops:
+            ops, comment = ops.split(' # ', 1)
+        ops = [] + ops.split(", ")
+        return Instruction(address, loc, mnemonic, ops, comment)
+
+    def get_disasm(start_addr, inst_length):
+        items = gdb.execute('ida GetFuncItems %#x' % start_addr, to_string=True)
+        items = json.loads(items)
+        for address in range(start_addr, start_addr + inst_length * nb_insn, inst_length):
+            if items and address in items:
+                ida_insn = gdb.execute('ida GetDisasm %#x' % address, to_string=True).strip()
+                yield ida_insn_to_pwngef_insn(address, ida_insn)
+            else:
+                yield gef_get_instruction_at(address)
+
+    length = pwngef.arch.CURRENT_ARCH.instruction_length
+    if nb_prev:
+        start_addr = gdb_get_nth_previous_instruction_address(addr, nb_prev)
+        if start_addr:
+            for insn in get_disasm(start_addr, length):
+                if insn.address == addr:
+                    break
+                yield insn
+    for insn in get_disasm(addr, length):
+        yield insn

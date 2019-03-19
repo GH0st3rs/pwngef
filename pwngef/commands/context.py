@@ -68,6 +68,7 @@ class ContextCommand(GenericCommand):
 
         if "capstone" in list(sys.modules.keys()):
             self.add_setting("use_capstone", False, "Use capstone as disassembler in the code pane (instead of GDB)")
+        self.add_setting("use_ida", False, "Use IDA as disassembler in the code pane (instead of GDB)")
 
         self.layout_mapping = {
             "legend": self.show_legend,
@@ -214,6 +215,7 @@ class ContextCommand(GenericCommand):
         nb_insn = self.get_setting("nb_lines_code")
         nb_insn_prev = self.get_setting("nb_lines_code_prev")
         use_capstone = self.has_setting("use_capstone") and self.get_setting("use_capstone")
+        use_ida = self.get_setting("use_ida")
         cur_insn_color = pwngef.config.get("theme.disassemble_current_instruction")
         pc = int(pwngef.arch.CURRENT_ARCH.pc)
 
@@ -224,6 +226,7 @@ class ContextCommand(GenericCommand):
 
         try:
             instruction_iterator = disass.capstone_disassemble if use_capstone else disass.gef_disassemble
+            instruction_iterator = disass.ida_disassemble if use_ida else instruction_iterator
             for insn in instruction_iterator(pc, nb_insn, nb_prev=nb_insn_prev):
                 line = []
                 is_taken = False
@@ -347,7 +350,9 @@ class ContextCommand(GenericCommand):
         pc = int(pwngef.arch.CURRENT_ARCH.pc)
         block_start = __get_current_block_start_address()
         use_capstone = self.has_setting("use_capstone") and self.get_setting("use_capstone")
+        use_ida = self.get_setting("use_ida")
         instruction_iterator = disass.capstone_disassemble if use_capstone else disass.gef_disassemble
+        instruction_iterator = disass.ida_disassemble if use_ida else instruction_iterator
         function_parameters = pwngef.arch.CURRENT_ARCH.function_parameters
         arg_key_color = pwngef.config.get("theme.registers_register_name")
 

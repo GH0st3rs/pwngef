@@ -250,6 +250,16 @@ class PwnGef:
             bb_list.append(bb.start_ea)
         return bb_list
 
+    def GetFuncItems(self, ea=None):
+        result = []
+        for i in map(int, idautils.FuncItems(ea)):
+            result.append(i)
+        if result:
+            pre = list(map(int, idautils.FuncItems(result[0] - 1)))
+            post = list(map(int, idautils.FuncItems(result[-1] + 1)))
+            result = pre + result + post
+        return result
+
 
 class ReqHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ("/RPC2",)
