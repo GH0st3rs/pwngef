@@ -8,7 +8,7 @@ import os
 import pwngef.config
 import pwngef.memoize
 
-disable_colors = pwngef.config.set('gef.disable_colors', bool(os.environ.get('PWNDBG_DISABLE_COLORS')), 'whether to color the output or not')
+disable_colors = pwngef.config.set('self.disable_colors', bool(os.environ.get('PWNDBG_DISABLE_COLORS')), 'whether to color the output or not')
 
 
 class Color:
@@ -78,7 +78,7 @@ class Color:
     @staticmethod
     def colorify(text, attrs):
         """Color text according to the given attributes."""
-        if pwngef.config.get("gef.disable_color") is True:
+        if pwngef.config.get("self.disable_color") is True:
             return text
 
         colors = Color.colors

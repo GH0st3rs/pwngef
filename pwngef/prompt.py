@@ -13,9 +13,9 @@ PWNGEF_PROMPT_OFF = "\001\033[1;31m\002{0:s}\001\033[0m\002".format(PWNGEF_PROMP
 
 def set_prompt(current_prompt):
     """PWNPWNGEF custom prompt function."""
-    if pwngef.config.get("gef.readline_compat") is True:
+    if pwngef.config.get("self.readline_compat") is True:
         return PWNGEF_PROMPT
-    if pwngef.config.get("gef.disable_color") is True:
+    if pwngef.config.get("self.disable_color") is True:
         return PWNGEF_PROMPT
     if pwngef.proc.alive:
         return PWNGEF_PROMPT_ON

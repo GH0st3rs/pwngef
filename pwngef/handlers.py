@@ -34,8 +34,8 @@ def new_objfile_handler(event):
 def exit_handler(event):
     """GDB event handler for exit cases."""
     pwngef.events.reset_all_caches()
-    pwngef.remote.__gef_qemu_mode__ = False
-    if pwngef.remote.__gef_remote__ and pwngef.config.get("gef-remote.clean_on_exit") is True:
-        shutil.rmtree("/tmp/gef/{:d}".format(pwngef.remote.__gef_remote__))
-        pwngef.remote.__gef_remote__ = None
+    pwngef.remote.__pwngef_qemu_mode__ = False
+    if pwngef.remote.__pwngef_remote__ and pwngef.config.get("pwngef-remote.clean_on_exit") is True:
+        shutil.rmtree("/tmp/pwngef/{:d}".format(pwngef.remote.__pwngef_remote__))
+        pwngef.remote.__pwngef_remote__ = None
     return

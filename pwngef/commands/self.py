@@ -31,7 +31,7 @@ def get_os():
 def execute_gdb_script(commands):
     """Execute the parameter `source` as GDB command. This is done by writing `commands` to
     a temporary file, which is then executed via GDB `source` command. The tempfile is then deleted."""
-    fd, fname = tempfile.mkstemp(suffix=".gdb", prefix="gef_")
+    fd, fname = tempfile.mkstemp(suffix=".gdb", prefix="pwngef_")
     with os.fdopen(fd, "w") as f:
         f.write(commands)
         f.flush()
@@ -41,23 +41,24 @@ def execute_gdb_script(commands):
     return
 
 
-class GefCommand(gdb.Command):
-    """PWNGEF main command: view all new commands by typing `gef`."""
+class SelfCommand(gdb.Command):
+    """PWNGEF main command: view all new commands by typing `self`."""
 
-    _cmdline_ = "gef"
+    _cmdline_ = "self"
     _syntax_ = "{:s} (missing|config|save|restore|set|run)".format(_cmdline_)
+    _aliases_ = ['pwngef', ]
 
     def __init__(self):
-        super(GefCommand, self).__init__(GefCommand._cmdline_,
-                                         gdb.COMMAND_SUPPORT,
-                                         gdb.COMPLETE_NONE,
-                                         True)
-        pwngef.config.set("gef.follow_child", True, "Automatically set GDB to follow child when forking")
-        pwngef.config.set("gef.readline_compat", False, "Workaround for readline SOH/ETX issue (SEGV)")
-        pwngef.config.set("gef.debug", False, "Enable debug mode for gef")
-        pwngef.config.set("gef.autosave_breakpoints_file", "", "Automatically save and restore breakpoints")
-        pwngef.config.set("gef.extra_plugins_dir", "", "Autoload additional PWNGEF commands from external directory")
-        pwngef.config.set("gef.disable_color", False, "Disable all colors in PWNGEF")
+        super(SelfCommand, self).__init__(SelfCommand._cmdline_,
+                                          gdb.COMMAND_SUPPORT,
+                                          gdb.COMPLETE_NONE,
+                                          True)
+        pwngef.config.set("self.follow_child", True, "Automatically set GDB to follow child when forking")
+        pwngef.config.set("self.readline_compat", False, "Workaround for readline SOH/ETX issue (SEGV)")
+        pwngef.config.set("self.debug", False, "Enable debug mode for PWNGEF")
+        pwngef.config.set("self.autosave_breakpoints_file", "", "Automatically save and restore breakpoints")
+        pwngef.config.set("self.extra_plugins_dir", "", "Autoload additional PWNGEF commands from external directory")
+        pwngef.config.set("self.disable_color", False, "Disable all colors in PWNGEF")
         self.loaded_commands = []
         self.loaded_functions = []
         self.missing_commands = {}
@@ -66,16 +67,16 @@ class GefCommand(gdb.Command):
     def setup(self):
         self.load(initial=True)
         # loading PWNGEF sub-commands
-        self.doc = GefHelpCommand(self.loaded_commands)
-        self.cfg = GefConfigCommand(self.loaded_command_names)
-        GefSaveCommand()
-        GefRestoreCommand()
-        GefMissingCommand()
-        GefSetCommand()
-        GefRunCommand()
+        self.doc = SelfHelpCommand(self.loaded_commands)
+        self.cfg = SelfConfigCommand(self.loaded_command_names)
+        SelfSaveCommand()
+        SelfRestoreCommand()
+        SelfMissingCommand()
+        SelfSetCommand()
+        SelfRunCommand()
 
         # load the saved settings
-        gdb.execute("gef restore")
+        gdb.execute("self restore")
 
         # restore the autosave/autoreload breakpoints policy (if any)
         self.__reload_auto_breakpoints()
@@ -84,11 +85,11 @@ class GefCommand(gdb.Command):
         if self.__load_extra_plugins() > 0:
             # if here, at least one extra plugin was loaded, so we need to restore
             # the settings once more
-            gdb.execute("gef restore quiet")
+            gdb.execute("self restore quiet")
         return None
 
     def __reload_auto_breakpoints(self):
-        bkp_fname = pwngef.config.get("gef.autosave_breakpoints_file")
+        bkp_fname = pwngef.config.get("self.autosave_breakpoints_file")
         if bkp_fname:
             # restore if existing
             print(pwngef.config.__config__)
@@ -108,7 +109,7 @@ class GefCommand(gdb.Command):
         nb_added = -1
         try:
             nb_inital = len(self.loaded_commands)
-            directories = pwngef.config.get("gef.extra_plugins_dir")
+            directories = pwngef.config.get("self.extra_plugins_dir")
             if directories:
                 for directory in directories.split(";"):
                     directory = os.path.realpath(os.path.expanduser(directory))
@@ -134,7 +135,7 @@ class GefCommand(gdb.Command):
 
     def invoke(self, args, from_tty):
         self.dont_repeat()
-        gdb.execute("gef help")
+        gdb.execute("self help")
         return None
 
     def load(self, initial=False):
@@ -159,7 +160,7 @@ class GefCommand(gdb.Command):
                 if hasattr(class_name, "_aliases_"):
                     aliases = getattr(class_name, "_aliases_")
                     for alias in aliases:
-                        GefAlias(alias, cmd)
+                        SelfAlias(alias, cmd)
 
             except Exception as reason:
                 self.missing_commands[cmd] = reason
@@ -171,8 +172,8 @@ class GefCommand(gdb.Command):
         if initial:
             print("{:s} for {:s} ready, type `{:s}' to start, `{:s}' to configure".format(
                 Color.greenify("PWNGEF"), get_os(),
-                Color.colorify("gef", "underline yellow"),
-                Color.colorify("gef config", "underline pink")
+                Color.colorify("self", "underline yellow"),
+                Color.colorify("self config", "underline pink")
             ))
 
             ver = "{:d}.{:d}".format(sys.version_info.major, sys.version_info.minor)
@@ -186,21 +187,21 @@ class GefCommand(gdb.Command):
                 message.warn("{:s} command{} could not be loaded, run `{:s}` to know why.".format(
                     Color.colorify(nb_missing, "bold red"),
                     "s" if nb_missing > 1 else "",
-                    Color.colorify("gef missing", "underline pink")
+                    Color.colorify("self missing", "underline pink")
                 ))
         return None
 
 
-class GefHelpCommand(gdb.Command):
+class SelfHelpCommand(gdb.Command):
     """PWNGEF help sub-command."""
-    _cmdline_ = "gef help"
+    _cmdline_ = "self help"
     _syntax_ = _cmdline_
 
     def __init__(self, commands, *args, **kwargs):
-        super(GefHelpCommand, self).__init__(GefHelpCommand._cmdline_,
-                                             gdb.COMMAND_SUPPORT,
-                                             gdb.COMPLETE_NONE,
-                                             False)
+        super(SelfHelpCommand, self).__init__(SelfHelpCommand._cmdline_,
+                                              gdb.COMMAND_SUPPORT,
+                                              gdb.COMPLETE_NONE,
+                                              False)
         self.docs = []
         self.generate_help(commands)
         self.refresh()
@@ -208,7 +209,7 @@ class GefHelpCommand(gdb.Command):
 
     def invoke(self, args, from_tty):
         self.dont_repeat()
-        print(message.titlify("PWNGEF - GDB Enhanced Features"))
+        print(message.titlify("PWNGEF - GDB Extra Features"))
         print(self.__doc__)
         return None
 
@@ -237,18 +238,18 @@ class GefHelpCommand(gdb.Command):
         return None
 
 
-class GefConfigCommand(gdb.Command):
+class SelfConfigCommand(gdb.Command):
     """PWNGEF configuration sub-command
     This command will help set/view PWNGEF settingsfor the current debugging session.
     It is possible to make those changes permanent by running `gef save` (refer
     to this command help), and/or restore previously saved settings by running
     `gef restore` (refer help).
     """
-    _cmdline_ = "gef config"
+    _cmdline_ = "self config"
     _syntax_ = "{:s} [setting_name] [setting_value]".format(_cmdline_)
 
     def __init__(self, loaded_commands, *args, **kwargs):
-        super(GefConfigCommand, self).__init__(GefConfigCommand._cmdline_, gdb.COMMAND_NONE, prefix=False)
+        super(SelfConfigCommand, self).__init__(SelfConfigCommand._cmdline_, gdb.COMMAND_NONE, prefix=False)
         self.loaded_commands = loaded_commands
         return None
 
@@ -314,7 +315,7 @@ class GefConfigCommand(gdb.Command):
             message.error("Invalid command format")
             return None
 
-        loaded_commands = [x[0] for x in pwngef.config.__gef__.loaded_commands] + ["gef"]
+        loaded_commands = [x[0] for x in pwngef.config.__pwngef__.loaded_commands] + ["self"]
         plugin_name = argv[0].split(".", 1)[0]
         if plugin_name not in loaded_commands:
             message.error("Unknown plugin '{:s}'".format(plugin_name))
@@ -339,7 +340,7 @@ class GefConfigCommand(gdb.Command):
         settings = sorted(pwngef.config.__config__)
 
         if text == "":
-            # no prefix: example: `gef config TAB`
+            # no prefix: example: `self config TAB`
             return [s for s in settings if word in s]
 
         if "." not in text:
@@ -350,15 +351,15 @@ class GefConfigCommand(gdb.Command):
         return [s.split(".", 1)[1] for s in settings if s.startswith(text.strip())]
 
 
-class GefSaveCommand(gdb.Command):
+class SelfSaveCommand(gdb.Command):
     """PWNGEF save sub-command.
-    Saves the current configuration of PWNGEF to disk (by default in file '~/.gef.rc')."""
-    _cmdline_ = "gef save"
+    Saves the current configuration of PWNGEF to disk (by default in file '~/.pwngef.rc')."""
+    _cmdline_ = "self save"
     _syntax_ = _cmdline_
 
     def __init__(self, *args, **kwargs):
-        super(GefSaveCommand, self).__init__(GefSaveCommand._cmdline_, gdb.COMMAND_SUPPORT,
-                                             gdb.COMPLETE_NONE, False)
+        super(SelfSaveCommand, self).__init__(SelfSaveCommand._cmdline_, gdb.COMMAND_SUPPORT,
+                                              gdb.COMPLETE_NONE, False)
         return None
 
     def invoke(self, args, from_tty):
@@ -389,17 +390,17 @@ class GefSaveCommand(gdb.Command):
         return None
 
 
-class GefRestoreCommand(gdb.Command):
+class SelfRestoreCommand(gdb.Command):
     """PWNGEF restore sub-command.
-    Loads settings from file '~/.gef.rc' and apply them to the configuration of PWNGEF."""
-    _cmdline_ = "gef restore"
+    Loads settings from file '~/.pwngef.rc' and apply them to the configuration of PWNGEF."""
+    _cmdline_ = "self restore"
     _syntax_ = _cmdline_
 
     def __init__(self, *args, **kwargs):
-        super(GefRestoreCommand, self).__init__(GefRestoreCommand._cmdline_,
-                                                gdb.COMMAND_SUPPORT,
-                                                gdb.COMPLETE_NONE,
-                                                False)
+        super(SelfRestoreCommand, self).__init__(SelfRestoreCommand._cmdline_,
+                                                 gdb.COMMAND_SUPPORT,
+                                                 gdb.COMPLETE_NONE,
+                                                 False)
         return None
 
     def invoke(self, args, from_tty):
@@ -415,7 +416,7 @@ class GefRestoreCommand(gdb.Command):
             if section == "aliases":
                 # load the aliases
                 for key in cfg.options(section):
-                    GefAlias(key, cfg.get(section, key))
+                    SelfAlias(key, cfg.get(section, key))
                 continue
 
             # load the other options
@@ -438,31 +439,31 @@ class GefRestoreCommand(gdb.Command):
         return None
 
 
-class GefMissingCommand(gdb.Command):
+class SelfMissingCommand(gdb.Command):
     """PWNGEF missing sub-command
     Display the PWNGEF commands that could not be loaded, along with the reason of why
     they could not be loaded.
     """
-    _cmdline_ = "gef missing"
+    _cmdline_ = "self missing"
     _syntax_ = _cmdline_
 
     def __init__(self, *args, **kwargs):
-        super(GefMissingCommand, self).__init__(GefMissingCommand._cmdline_,
-                                                gdb.COMMAND_SUPPORT,
-                                                gdb.COMPLETE_NONE,
-                                                False)
+        super(SelfMissingCommand, self).__init__(SelfMissingCommand._cmdline_,
+                                                 gdb.COMMAND_SUPPORT,
+                                                 gdb.COMPLETE_NONE,
+                                                 False)
         return None
 
     def invoke(self, args, from_tty):
         self.dont_repeat()
         config_arrow_right = pwngef.config.get('theme.chain_arrow_right')
-        missing_commands = pwngef.config.__gef__.missing_commands.keys()
+        missing_commands = pwngef.config.__pwngef__.missing_commands.keys()
         if not missing_commands:
             message.success("No missing command")
             return None
 
         for missing_command in missing_commands:
-            reason = pwngef.config.__gef__.missing_commands[missing_command]
+            reason = pwngef.config.__pwngef__.missing_commands[missing_command]
             message.warn("Command `{}` is missing, reason {} {}".format(
                 missing_command,
                 config_arrow_right,
@@ -471,17 +472,17 @@ class GefMissingCommand(gdb.Command):
         return None
 
 
-class GefSetCommand(gdb.Command):
+class SelfSetCommand(gdb.Command):
     """Override GDB set commands with the context from PWNGEF.
     """
-    _cmdline_ = "gef set"
+    _cmdline_ = "self set"
     _syntax_ = "{:s} [GDB_SET_ARGUMENTS]".format(_cmdline_)
 
     def __init__(self, *args, **kwargs):
-        super(GefSetCommand, self).__init__(GefSetCommand._cmdline_,
-                                            gdb.COMMAND_SUPPORT,
-                                            gdb.COMPLETE_SYMBOL,
-                                            False)
+        super(SelfSetCommand, self).__init__(SelfSetCommand._cmdline_,
+                                             gdb.COMMAND_SUPPORT,
+                                             gdb.COMPLETE_SYMBOL,
+                                             False)
         return None
 
     def invoke(self, args, from_tty):
@@ -489,7 +490,7 @@ class GefSetCommand(gdb.Command):
         args = args.split()
         cmd = ["set", args[0], ]
         for p in args[1:]:
-            if p.startswith("$_gef"):
+            if p.startswith("$_pwngef"):
                 c = gdb.parse_and_eval(p)
                 cmd.append(c.string())
             else:
@@ -499,17 +500,17 @@ class GefSetCommand(gdb.Command):
         return None
 
 
-class GefRunCommand(gdb.Command):
+class SelfRunCommand(gdb.Command):
     """Override GDB run commands with the context from PWNGEF.
-    Simple wrapper for GDB run command to use arguments set from `gef set args`. """
-    _cmdline_ = "gef run"
+    Simple wrapper for GDB run command to use arguments set from `self set args`. """
+    _cmdline_ = "self run"
     _syntax_ = "{:s} [GDB_RUN_ARGUMENTS]".format(_cmdline_)
 
     def __init__(self, *args, **kwargs):
-        super(GefRunCommand, self).__init__(GefRunCommand._cmdline_,
-                                            gdb.COMMAND_SUPPORT,
-                                            gdb.COMPLETE_FILENAME,
-                                            False)
+        super(SelfRunCommand, self).__init__(SelfRunCommand._cmdline_,
+                                             gdb.COMMAND_SUPPORT,
+                                             gdb.COMPLETE_FILENAME,
+                                             False)
         return None
 
     def invoke(self, args, from_tty):
@@ -519,12 +520,12 @@ class GefRunCommand(gdb.Command):
             return None
 
         argv = args.split()
-        gdb.execute("gef set args {:s}".format(" ".join(argv)))
+        gdb.execute("self set args {:s}".format(" ".join(argv)))
         gdb.execute("run")
         return None
 
 
-class GefAlias(gdb.Command):
+class SelfAlias(gdb.Command):
     """Simple aliasing wrapper because GDB doesn't do what it should."""
 
     def __init__(self, alias, command, completer_class=gdb.COMPLETE_NONE, command_class=gdb.COMMAND_NONE):
@@ -547,7 +548,7 @@ class GefAlias(gdb.Command):
             if hasattr(_instance, "complete"):
                 self.complete = _instance.complete
 
-        super(GefAlias, self).__init__(alias, command_class, completer_class=completer_class)
+        super(SelfAlias, self).__init__(alias, command_class, completer_class=completer_class)
         sys.modules[__name__].__aliases__.append(self)
         return None
 
@@ -556,18 +557,18 @@ class GefAlias(gdb.Command):
         return None
 
     def lookup_command(self, cmd):
-        for _name, _class, _instance in pwngef.config.__gef__.loaded_commands:
+        for _name, _class, _instance in pwngef.config.__pwngef__.loaded_commands:
             if cmd == _name:
                 return _name, _class, _instance
 
         return None
 
 
-class GefAliases(gdb.Command):
+class SelfAliases(gdb.Command):
     """List all custom aliases."""
 
     def __init__(self):
-        super(GefAliases, self).__init__("aliases", gdb.COMMAND_OBSCURE, gdb.COMPLETE_NONE)
+        super(SelfAliases, self).__init__("aliases", gdb.COMMAND_OBSCURE, gdb.COMPLETE_NONE)
         return None
 
     def invoke(self, args, from_tty):
@@ -578,12 +579,12 @@ class GefAliases(gdb.Command):
         return None
 
 
-class GefTmuxSetup(gdb.Command):
+class SelfTmuxSetup(gdb.Command):
     """Setup a confortable tmux debugging environment."""
 
     def __init__(self):
-        super(GefTmuxSetup, self).__init__("tmux-setup", gdb.COMMAND_NONE, gdb.COMPLETE_NONE)
-        GefAlias("screen-setup", "tmux-setup")
+        super(SelfTmuxSetup, self).__init__("tmux-setup", gdb.COMMAND_NONE, gdb.COMPLETE_NONE)
+        SelfAlias("screen-setup", "tmux-setup")
         return None
 
     def invoke(self, args, from_tty):
@@ -614,7 +615,7 @@ class GefTmuxSetup(gdb.Command):
         pty = list(new_ptses - old_ptses)[0]
         pty = "/dev/pts/{}".format(pty)
         message.success("Setting `context.redirect` to '{}'...".format(pty))
-        gdb.execute("gef config context.redirect {}".format(pty))
+        gdb.execute("pwngef config context.redirect {}".format(pty))
         message.success("Done!")
         return None
 
@@ -640,7 +641,7 @@ class GefTmuxSetup(gdb.Command):
         with open(tty_path, "r") as f:
             pty = f.read().strip()
         message.success("Setting `context.redirect` to '{}'...".format(pty))
-        gdb.execute("gef config context.redirect {}".format(pty))
+        gdb.execute("pwngef config context.redirect {}".format(pty))
         message.success("Done!")
         os.unlink(script_path)
         os.unlink(tty_path)
@@ -648,5 +649,5 @@ class GefTmuxSetup(gdb.Command):
 
 
 # Initialize commands
-pwngef.config.__gef__ = GefCommand()
-pwngef.config.__gef__.setup()
+pwngef.config.__pwngef__ = SelfCommand()
+pwngef.config.__pwngef__.setup()

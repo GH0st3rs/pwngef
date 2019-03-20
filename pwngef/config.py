@@ -19,9 +19,10 @@ import sys
 import tempfile
 
 __config__ = {}
+__pwngef__ = None
 
-PWNGEF_RC = os.path.join(os.getenv("HOME"), ".gef.rc")
-PWNGEF_TEMP_DIR = os.path.join(tempfile.gettempdir(), "gef")
+PWNGEF_RC = os.path.join(os.getenv("HOME"), ".pwngef.rc")
+PWNGEF_TEMP_DIR = os.path.join(tempfile.gettempdir(), "pwngef")
 HORIZONTAL_LINE = "-"
 VERTICAL_LINE = "|"
 

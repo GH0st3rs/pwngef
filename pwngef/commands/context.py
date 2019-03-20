@@ -90,7 +90,7 @@ class ContextCommand(GenericCommand):
         return None
 
     def show_legend(self):
-        if pwngef.config.get("gef.disable_colors") is not True:
+        if pwngef.config.get("self.disable_colors") is not True:
             str_color = pwngef.config.get("theme.dereference_string")
             code_addr_color = pwngef.config.get("theme.address_code")
             stack_addr_color = pwngef.config.get("theme.address_stack")

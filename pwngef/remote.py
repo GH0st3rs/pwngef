@@ -9,8 +9,8 @@ from __future__ import print_function
 
 import gdb
 
-__gef_remote__ = None
-__gef_qemu_mode__ = False
+__pwngef_remote__ = None
+__pwngef_qemu_mode__ = False
 
 
 def is_remote():
