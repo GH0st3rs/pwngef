@@ -1,4 +1,4 @@
-# pwngef
+# pwngef [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/GH0st3rs/pwngef/blob/master/LICENSE.md)
 
 `pwngef` is a GDB plug-in based on [pwngdb][pwndbg], [GEF][GEF] and [PEDA][PEDA] that makes debugging MIPS with GDB suck less.
 
