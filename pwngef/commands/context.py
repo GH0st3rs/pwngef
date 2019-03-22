@@ -350,9 +350,7 @@ class ContextCommand(GenericCommand):
         pc = int(pwngef.arch.CURRENT_ARCH.pc)
         block_start = __get_current_block_start_address()
         use_capstone = self.has_setting("use_capstone") and self.get_setting("use_capstone")
-        use_ida = self.get_setting("use_ida")
         instruction_iterator = disass.capstone_disassemble if use_capstone else disass.gef_disassemble
-        instruction_iterator = disass.ida_disassemble if use_ida else instruction_iterator
         function_parameters = pwngef.arch.CURRENT_ARCH.function_parameters
         arg_key_color = pwngef.config.get("theme.registers_register_name")
 
