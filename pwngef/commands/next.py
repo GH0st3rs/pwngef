@@ -4,6 +4,8 @@ from __future__ import division
 from __future__ import print_function
 
 import gdb
+import pwngef.arch
+import pwngef.disassemble as disass
 
 
 class StepOver(gdb.Command):
@@ -13,9 +15,11 @@ class StepOver(gdb.Command):
         super(StepOver, self).__init__("next", gdb.COMMAND_RUNNING)
 
     def invoke(self, arg, from_tty):
-        pc = int(gdb.parse_and_eval('$pc'))
-        gdb.Breakpoint('*%#x' % (pc + 8), internal=True, temporary=True)
-        gdb.execute('continue', from_tty=False, to_string=False)
+        pc = int(pwngef.arch.CURRENT_ARCH.pc)
+        insn = disass.gef_current_instruction(pc)
+        if pwngef.arch.CURRENT_ARCH.is_call(insn):
+            gdb.Breakpoint('*%#x' % (pc + 8), internal=True, temporary=True)
+            gdb.execute('continue', from_tty=False, to_string=False)
 
 
 StepOver()
