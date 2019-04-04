@@ -51,7 +51,7 @@ class ELFInfo(namedtuple('ELFInfo', 'header sections segments')):
 
 
 @pwngef.events.new_objfile
-def update():
+def update(event=None):
     reload_module(pwngef.elftypes)
 
     if pwngef.arch.ptrsize == 4:

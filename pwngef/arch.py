@@ -28,7 +28,7 @@ def fix_arch(arch):
 
 
 @pwngef.events.new_objfile
-def update():
+def update(event=None):
     m = sys.modules[__name__]
     # GDB 7.7 (Ubuntu Trusty) does not like selected_frame() when EBP/RBP
     # is not mapped / pounts to an invalid address.

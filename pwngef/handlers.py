@@ -25,7 +25,6 @@ def hook_stop_handler(event):
 
 def new_objfile_handler(event):
     """GDB event handler for new object file cases."""
-    print('new_objfile_handler')
     pwngef.events.reset_all_caches()
     pwngef.arch.set_arch()
     return
