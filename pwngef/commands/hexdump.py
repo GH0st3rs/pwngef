@@ -3,6 +3,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import gdb
+
 import pwngef.commands
 from pwngef.commands import GenericCommand
 from pwngef.color import message
@@ -15,8 +17,8 @@ import pwngef.memory
 class HexDumpCommand(GenericCommand):
     '''Hexdumps data at the specified address (or at $sp)'''
     _cmdline_ = "hexdump"
-    _syntax_ = "{:s} [address] [count]".format(_cmdline_)
-    _example_ = "\n{0:s}\n{0:s} 0x10000 100".format(_cmdline_)
+    _syntax_ = "{:s} [address|reg] [count]".format(_cmdline_)
+    _example_ = "\n{0:s}\n{0:s} 0x10000 100\n{0:s} $sp 0x100\n{0:s} $sp+10 0x100".format(_cmdline_)
 
     def __init__(self):
         super(HexDumpCommand, self).__init__()
@@ -30,13 +32,13 @@ class HexDumpCommand(GenericCommand):
     @pwngef.proc.OnlyWhenRunning
     def do_invoke(self, argv):
         width = self.get_setting('hexdump_width')
+        count = self.get_setting('hexdump_bytes')
         if not argv:
-            message.warn("No arguments found! Default dump 128 byte by $sp")
+            message.warn("No arguments found! Default dump %d byte by $sp" % count)
             address = int(pwngef.arch.CURRENT_ARCH.sp)
-            count = 128
         else:
-            count = int(argv[1]) if len(argv) > 1 else 128
-            address = int(argv[0], 16) if argv[0].startswith('0x') or argv[0].startswith('0X') else int(argv[0])
+            count = int(gdb.parse_and_eval(argv[0])) if len(argv) > 1 else count
+            address = int(gdb.parse_and_eval(argv[0]))
 
         data = pwngef.memory.read(address, count, partial=True)
         for _, line in enumerate(pwngef.hexdump.hexdump(data, address=address, width=width)):
