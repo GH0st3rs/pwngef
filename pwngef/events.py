@@ -14,7 +14,7 @@ import gdb
 
 import pwngef.config
 
-debug = pwngef.config.set('gef.debug_events', False, 'display internal event debugging info')
+debug = pwngef.config.set('self.debug_events', False, 'display internal event debugging info')
 
 
 # In order to support reloading, we must be able to re-fire

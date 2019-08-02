@@ -7,8 +7,8 @@ import string
 from pwngef.color import Color
 import pwngef.memory
 
-LIMIT = pwngef.config.set('gef.dereference_limit', 5, 'max number of pointers to dereference in a chain')
-string_limit = pwngef.config.set('gef.dereference_string_limit', 30, 'max number of chars to dereference string')
+LIMIT = pwngef.config.set('self.dereference_limit', 5, 'max number of pointers to dereference in a chain')
+string_limit = pwngef.config.set('self.dereference_string_limit', 30, 'max number of chars to dereference string')
 
 
 def format(value, limit=LIMIT, code=True):

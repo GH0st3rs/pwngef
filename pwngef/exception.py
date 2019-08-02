@@ -20,8 +20,8 @@ try:
 except ImportError:
     pass
 
-verbose = pwngef.config.set('gef.exception_verbose', False, 'whether to print a full stacktracefor exceptions raised in Pwndbg commands')
-debug = pwngef.config.set('gef.exception_debugger', False, 'whether to debug exceptions raised in Pwndbg commands')
+verbose = pwngef.config.set('self.exception_verbose', False, 'whether to print a full stacktracefor exceptions raised in Pwndbg commands')
+debug = pwngef.config.set('self.exception_debugger', False, 'whether to debug exceptions raised in Pwndbg commands')
 
 
 @pwngef.memoize.forever
