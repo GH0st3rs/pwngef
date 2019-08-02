@@ -97,7 +97,7 @@ pwngef.events.stop(pwngef.handlers.hook_stop_handler)
 pwngef.events.new_objfile(pwngef.handlers.new_objfile_handler)
 pwngef.events.exit(pwngef.handlers.exit_handler)
 
-if gdb.current_progspace().filename is not None:
+if gdb.progspaces()[0].filename is not None:
     pwngef.arch.update()
 
 pwngef.commands.self.SelfAliases()
