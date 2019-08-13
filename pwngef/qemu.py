@@ -7,7 +7,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import psutil
+try:
+    import psutil
+except:
+    from sys import executable
+    from os.path import basename
+    from time import sleep
+    print('\n[X] psutil module required by pwngef. To install run next command:\n\t%s -m pip install psutil\n' %(basename(executable)))
+    raise
 
 import gdb
 
