@@ -12,7 +12,6 @@ try:
 except:
     from sys import executable
     from os.path import basename
-    from time import sleep
     print('\n[X] psutil module required by pwngef. To install run next command:\n\t%s -m pip install psutil\n' %(basename(executable)))
     raise
 
