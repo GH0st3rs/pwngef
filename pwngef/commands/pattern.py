@@ -1,11 +1,15 @@
 import string
 import re
+import struct
 
 import gdb
 
+import pwngef.arch
+from pwngef.color import Color
 import pwngef.commands
 from pwngef.commands import GenericCommand
 import pwngef.proc
+import pwngef.regs
 
 
 def cyclic_pattern_charset():
@@ -65,6 +69,31 @@ def de_bruijn(charset, n, maxlen):
     return ''.join(sequence)
 
 
+def cyclic_pattern(size=0x10000):
+    charset = cyclic_pattern_charset()
+    pattern = de_bruijn(charset, 3, size)
+    return pattern
+
+
+def cyclic_pattern_offset(value, pattern=None):
+    """
+    Search a value if it is a part of cyclic pattern
+    Args:
+        - value: value to search for (String/Int)
+    Returns:
+        - offset in pattern if found
+    """
+    pattern = pattern or cyclic_pattern().encode()
+    if isinstance(value, int):
+        search = struct.pack(pwngef.arch.fmt, value)
+    elif isinstance(value, (bytearray, bytes)):
+        search = value
+    elif isinstance(value, str):
+        search = value.encode()
+    pos = pattern.find(search)
+    return pos if pos != -1 else None
+
+
 @pwngef.commands.register_command
 class PatternCommand(GenericCommand):
     """Generate, search, or write a cyclic pattern to memory"""
@@ -98,17 +127,16 @@ class PatternCreateCommand(GenericCommand):
             size = 0x100
         else:
             size = int(gdb.parse_and_eval(argv[0]))
-        charset = cyclic_pattern_charset()
-        pattern = de_bruijn(charset, 3, size)
+        pattern = cyclic_pattern(size)
         print(pattern)
 
 
 @pwngef.commands.register_command
 class PatternSearchCommand(GenericCommand):
-    """Generate a cyclic pattern"""
+    """Search a cyclic pattern into the memory"""
 
     _cmdline_ = "pattern search"
-    _syntax_ = "{:s} [pattern]".format(_cmdline_)
+    _syntax_ = "{:s}".format(_cmdline_)
 
     def __init__(self):
         super(PatternSearchCommand, self).__init__()
@@ -116,4 +144,24 @@ class PatternSearchCommand(GenericCommand):
 
     @pwngef.proc.OnlyWhenRunning
     def do_invoke(self, argv):
-        print('Not yet!')
+        pattern = cyclic_pattern().encode()
+        registers = pwngef.arch.CURRENT_ARCH.all_registers
+        reg_result = {}
+        for reg in registers:
+            r = int(pwngef.regs.get_register(reg))
+            result = self.check_offsets(r, pattern)
+            if result:
+                reg_result[reg] = result
+        if reg_result:
+            print(Color.redify('Registers contain pattern buffer:'))
+            for (reg, (pos, offset)) in reg_result.items():
+                print("{}+{} found at offset: {}".format(reg.upper(), offset, pos))
+
+    def check_offsets(self, v, pattern=None):
+        if v - 128 <= 0:
+            return None
+        for offset in range(-128, 128, 4):
+            pos = cyclic_pattern_offset(v + offset, pattern)
+            if pos is not None:
+                return (pos, offset)
+        return None
