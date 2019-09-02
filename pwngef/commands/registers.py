@@ -63,7 +63,7 @@ def print_registers(registers, ignored_registers=[], old_registers={}, flags=Fal
             if r.type.code == gdb.TYPE_CODE_VOID:
                 continue
             new_value_type_flag = (r.type.code == gdb.TYPE_CODE_FLAGS)
-            new_value = int(r) if r > 0 else pwngef.arch.ptrmask + int(r) + 1
+            new_value = int(r) if r >= 0 else pwngef.arch.ptrmask + int(r) + 1
         except (gdb.MemoryError, gdb.error):
             # If this exception is triggered, it means that the current register
             # is corrupted. Just use the register "raw" value (not eval-ed)

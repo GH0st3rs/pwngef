@@ -15,6 +15,7 @@ import pwngef.commands.heap
 import pwngef.commands.hexdump
 import pwngef.commands.ida
 import pwngef.commands.next
+import pwngef.commands.pattern
 import pwngef.commands.pcustom
 import pwngef.commands.registers
 import pwngef.commands.theme
