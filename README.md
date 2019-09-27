@@ -23,6 +23,6 @@ Because anybody didn't like MIPS architecture:
 
 ```
 git clone https://github.com/GH0st3rs/pwngef.git ~/pwngef
-sudo python -m pip install -rU ~/pwngef/requirements.txt
+sudo python -m pip install -Ur ~/pwngef/requirements.txt
 echo "source ~/pwngef/gdbinit.py" >> ~/.gdbinit
 ```
