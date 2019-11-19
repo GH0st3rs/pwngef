@@ -2,10 +2,6 @@
 """
 Reading, writing, and describing memory.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import gdb
 
@@ -45,7 +41,8 @@ def read(addr, count, partial=False):
 
         if not hasattr(e, 'message'):
             e.message = str(e)
-
+        if e.message == 'Remote connection closed':
+            return bytearray(b'')
         stop_addr = int(e.message.split()[-1], 0)
         if stop_addr != addr:
             return read(addr, stop_addr - addr)

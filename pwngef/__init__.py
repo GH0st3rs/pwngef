@@ -1,8 +1,4 @@
 #!/usr/bin/python
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import signal
 
 import gdb
@@ -60,6 +56,7 @@ pre_commands = [
     'set verbose off',
     'set pagination off',
     'set height 0',
+    'set history filename /tmp/.gdb_history'
     'set history expansion on',
     'set history save on',
     'set follow-fork-mode child',

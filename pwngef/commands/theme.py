@@ -1,8 +1,4 @@
 #!/usr/bin/python
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import pwngef.commands
 from pwngef.commands import GenericCommand
 from pwngef.color import Color

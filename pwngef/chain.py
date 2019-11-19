@@ -1,8 +1,4 @@
 #!/usr/bin/python
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import string
 from pwngef.color import Color
 import pwngef.memory
@@ -93,3 +89,10 @@ def examine_mem_value(address, limit=LIMIT):
         result.append(address)
 
     return result
+
+
+def lazy_dereference(value):
+    bits = pwngef.arch.ptrsize * 8
+    if pwngef.memory.peek(value):
+        return pwngef.memory.u32(value) if bits == 32 else pwngef.memory.u64(value)
+    return None

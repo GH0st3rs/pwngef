@@ -1,8 +1,4 @@
 #!/usr/bin/python
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import gdb
 
 import pwngef.config
@@ -71,6 +67,7 @@ def print_registers(registers, ignored_registers=[], old_registers={}, flags=Fal
             new_value_type_flag = False
         except Exception:
             new_value = 0
+            new_value_type_flag = False
 
         old_value = old_registers.get(reg, 0)
         padreg = reg.ljust(widest, " ")

@@ -1,14 +1,11 @@
 #!/usr/bin/python
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import abc
 import gdb
 
 from pwngef.color import Color
 import pwngef.proc
 import pwngef.arch
+from pwngef.chain import lazy_dereference
 
 
 @pwngef.proc.OnlyWhenRunning
@@ -351,9 +348,9 @@ class ARM(Architecture):
             # If it's a pop, we have to peek into the stack, otherwise use lr
             if insn.mnemonic == "pop":
                 ra_addr = pwngef.arch.CURRENT_ARCH.sp + (len(insn.operands) - 1) * pwngef.arch.ptrsize
-                ra = int(dereference(ra_addr))
+                ra = lazy_dereference(ra_addr)
             elif insn.mnemonic == "ldr":
-                return int(dereference(pwngef.arch.CURRENT_ARCH.sp))
+                return lazy_dereference(pwngef.arch.CURRENT_ARCH.sp)
             else:  # 'bx lr' or 'add pc, lr, #0'
                 return get_register("$lr")
         elif frame.older():
@@ -564,7 +561,7 @@ class X86(Architecture):
     def get_ra(self, insn, frame):
         ra = None
         if self.is_ret(insn):
-            ra = int(dereference(pwngef.arch.CURRENT_ARCH.sp))
+            ra = lazy_dereference(pwngef.arch.CURRENT_ARCH.sp)
         if frame.older():
             ra = frame.older().pc()
         return ra
