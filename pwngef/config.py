@@ -23,6 +23,8 @@ HORIZONTAL_LINE = "-"
 VERTICAL_LINE = "|"
 
 DOWN_ARROW = "\u21b3"
+RIGHT_ARROW = "\u2192"
+LEFT_ARROW = "\u2190"
 
 
 def get(name, get_all=False):
