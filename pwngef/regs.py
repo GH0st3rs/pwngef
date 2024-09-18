@@ -905,7 +905,7 @@ class MIPS(Architecture):
         return Color.colorify("No flag register", "yellow underline")
 
     def is_call(self, insn):
-        return insn.mnemonic == "jalr" and insn.operands[0] == "t9"
+        return (insn.mnemonic == "jalr" and insn.operands[0] == "t9") or (insn.mnemonic == "jal")
 
     def is_ret(self, insn):
         return insn.mnemonic == "jr" and insn.operands[0] == "ra"

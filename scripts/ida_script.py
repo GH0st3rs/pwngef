@@ -1,7 +1,8 @@
 #!/usr/bin/python
-
-
-from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
+try:
+    from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
+except ImportError:
+    from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import threading
 
 import idautils

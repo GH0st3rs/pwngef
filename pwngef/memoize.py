@@ -4,7 +4,12 @@ Caches return values until some event in the inferior happens,
 e.g. execution stops because of a SIGINT or breakpoint, or a
 new library/objfile are loaded, etc.
 """
-import collections
+try:
+    # Python >= 3.10
+    from collections.abc import Hashable
+except ImportError:
+    # Python < 3.10
+    from collections import Hashable
 import functools
 import sys
 
@@ -28,7 +33,7 @@ class memoize(object):
     def __call__(self, *args, **kwargs):
         how = None
 
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, Hashable):
             print("Cannot memoize %r!", file=sys.stderr)
             how = "Not memoizeable!"
             value = self.func(*args)
